@@ -1,6 +1,8 @@
 import cloudinary from "../config/cloudinary.js";
+import Inquiry from "../models/inquiry.model.js";
 import Property from "../models/property.model.js";
 import { uploadCloudinary } from "../utils/uploadCloudinary.js";
+import jwt from 'jsonwebtoken'
 
 // Add a property
 export const addProperty = async (req, res) => {
@@ -57,7 +59,7 @@ export const addProperty = async (req, res) => {
 };
 
 // get my property by id
-export const getMyProperty = async (req, res) => {
+export const getMyProperties = async (req, res) => {
     try {
         const properties = await Property.find({
             seller: req.user._id
@@ -175,28 +177,28 @@ export const deleteProperty = async (req, res) => {
             return res.status(403).json({
                 success: false,
                 message: "Not Authorized"
-            })
+            });
         }
 
-        // delete image rom cloudinary
+        // delete images from cloudinary
         for (let imageUrl of property.images) {
             const publicId = imageUrl.split("/").pop().split(".")[0];
-            await cloudinary.uploader.destroy("properties/" + publicId)
+            await cloudinary.uploader.destroy("properties/" + publicId);
         }
 
         await property.deleteOne();
         res.json({
             success: true,
             message: "Property deleted successfully"
-        })
+        });
 
     } catch (error) {
         res.status(500).json({
             success: false,
             message: error.message,
-        })
+        });
     }
-}
+};
 
 // update property status
 export const updatePropertyStatus = async (req, res) => {
@@ -223,14 +225,14 @@ export const updatePropertyStatus = async (req, res) => {
             success: true,
             message: "Property status updated successfully!",
             property
-        })
+        });
     } catch (error) {
         res.status(500).json({
             success: false,
             message: error.message,
-        })
+        });
     }
-}
+};
 
 // GET ALL PROPERTIES
 export const getAllProperties = async (req, res) => {
@@ -308,6 +310,133 @@ export const getAllProperties = async (req, res) => {
         res.status(500).json({
             success: false,
             message: "Internal server error while fetching properties",
+            error: error.message,
+        });
+    }
+};
+
+// to get properties details
+export const getPropertyDetails = async (req, res) => {
+    try {
+        const property = await Property.findById(req.params.id).populate(
+            "seller",
+            "name email phone profilePic"
+        );
+
+        if (!property) {
+            return res.status(404).json({
+                success: false,
+                message: "Property not found"
+            });
+        }
+
+        // unique view tracking by visitor
+        let visitorId = req.ip;
+        const authHeader = req.headers.authorization;
+        if (authHeader && authHeader.startsWith("Bearer")) {
+            try {
+                const token = authHeader.split(" ")[1];
+                const decoded = jwt.verify(token, process.env.JWT_SECRET);
+                visitorId = decoded.id;
+
+            } catch (error) {
+                // ignore
+            }
+        }
+
+        const isSellerChecking = visitorId === property.seller._id.toString();
+        if (!isSellerChecking && !property.viewedBy.includes(visitorId)) {
+            property.views += 1;
+            property.viewedBy.push(visitorId);
+            await property.save();
+        }
+
+        const similarProperties = await Property.find({
+            _id: { $ne: property._id },
+            city: property.city,
+            propertyType: property.propertyType,
+            status: property.status
+        })
+            .limit(4)
+            .select("title price images city area propertyType bhk areaSize status");
+
+        res.json({
+            success: true,
+            property,
+            similarProperties
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message,
+        });
+    }
+};
+
+// get seller dashboard
+export const getSellerDashboard = async (req, res) => {
+    try {
+        const sellerId = req.user._id;
+        const totalProperties = await Property.countDocuments({ seller: sellerId });
+        const activeListings = await Property.countDocuments({
+            seller: sellerId,
+            status: "sale"
+        });
+
+        const soldProperties = await Property.countDocuments({
+            seller: sellerId,
+            status: "sold"
+        });
+
+        const totalInquiries = await Inquiry.countDocuments({ seller: sellerId });
+
+        // calculate total views for all properties
+        const viewsData = await Property.aggregate([
+            { $match: { seller: sellerId } },
+            { $group: { _id: null, totalViews: { $sum: "$views" } } }
+        ]);
+        const totalViews = viewsData.length > 0 ? viewsData[0].totalViews : 0;
+
+        res.json({
+            success: true,
+            stats: {
+                totalProperties,
+                activeListings,
+                soldProperties,
+                totalInquiries,
+                totalViews
+            }
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message,
+        });
+    }
+};
+
+// GET PROPERTY COUNTS BY TYPE
+export const getPropertyCount = async (req, res) => {
+    try {
+        const counts = await Property.aggregate([
+            { $match: { status: "sale" } },
+            { $group: { _id: "$propertyType", count: { $sum: 1 } } }
+        ]);
+
+        const formattedCounts = counts.reduce((acc, curr) => {
+            acc[curr._id] = curr.count;
+            return acc;
+        }, {});
+
+        res.json({
+            success: true,
+            counts: formattedCounts
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
             error: error.message,
         });
     }
