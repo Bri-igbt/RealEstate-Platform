@@ -38,13 +38,32 @@ export const createContact = async (req, res) => {
         }
 
         res.status(201).json({
-            success: true
+            success: true,
+            message: "Message Sent Successfully"
+        })
+
+    } catch (error) {
+        console.log("Contact Error:", err);        
+        res.status(500).json({
+            success: false,
+            message: error.message
+        })
+    }
+}
+
+// GET ALL CONTACT(ADMIN)
+export const getAllContacts = async (req, res) => {
+    try {
+        const contacts = await Contact.find().sort({ createdAt: -1 });
+        res.status(200).json({
+            success: true,
+            contacts
         })
 
     } catch (error) {
         res.status(500).json({
             success: false,
-            message: error.message
+            message: "Failed to fetch contacts" | error.message
         })
     }
 }
