@@ -618,7 +618,7 @@ export const landingPageStyles = {
 
   // Hero section
   heroSection:
-    "fade-in items-center justify-center  hero-section pt-32 pb-16 xl:px-40 md:px-20 flex items-center gap-16 overflow-hidden md:flex-col lg:flex-col xl:flex-row max-lg:flex-col max-lg:text-center max-lg:pt-28 max-lg:pb-8 max-lg:px-4 max-lg:gap-8",
+    "fade-in items-center justify-center  hero-section pt-32 pb-10 xl:px-20 md:px-10 flex items-center gap-10 overflow-hidden md:flex-col lg:flex-col xl:flex-row max-lg:flex-col max-lg:text-center max-lg:pt-28 max-lg:pb-8 max-lg:px-4 max-lg:gap-8",
   heroContent:
     "hero-content flex-1 max-lg:flex max-lg:flex-col max-lg:items-center",
   badge: "badge bg-primary-light text-primary-dark mb-6 inline-block",
@@ -660,7 +660,7 @@ export const landingPageStyles = {
     "rounded-[3rem] overflow-hidden shadow-[0_40px_80px_-20px_rgba(0,0,0,0.25)] relative",
   heroImage: "w-full h-[600px] object-cover",
   verifiedBadge:
-    "glass absolute bottom-8 left-8 p-6 rounded-3xl flex items-center gap-4 max-w-[300px]",
+    "glass absolute bottom-8 left-8 p-2 rounded-3xl flex items-center gap-4 max-w-[300px]",
   badgeIconWrapper: "bg-primary-light p-3 rounded-2xl",
   badgeTitle: "text-[0.9375rem] m-0 font-bold",
   badgeText: "text-[0.75rem] text-text-muted m-0",
