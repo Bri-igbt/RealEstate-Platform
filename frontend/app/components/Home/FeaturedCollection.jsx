@@ -3,9 +3,11 @@
 import React, { useState } from 'react'
 import { landingPageStyles as s } from '@/assets/dummyStyles.js'
 import PropertyCard from '@/app/components/commons/PropertyCard.jsx';
+import { useRouter } from 'next/navigation.js';
 
 const FeaturedCollection = () => {
-        const [loading, setLoading] = useState(true);
+    const router = useRouter();
+    const [loading, setLoading] = useState(true);
 
     return (
         <div className={s.featuredSection}>
@@ -29,27 +31,26 @@ const FeaturedCollection = () => {
                     </div>
                 ) : (
                     <div className={s.propertiesGrid}>
-                                {properties
-                                    .filter((p) => p)
-                                    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-                                    .slice(0, 6)
-                                    .map((property) => (
-                                        <PropertyCard
-                                            key={property._id}
-                                            property={property}
-                                            isWishlisted={wishlistedIds.includes(String(property._id))}
-                                            onToggleWishlist={handleToggleWishlist}
-                                        />
-                                    ))}
-
-                                {[FaFacebookF, FaTwitter, FaInstagram, FaLinkedinIn].map(
-                                    (Icon, idx) => (
-                                        <div></div>
-                                    ),
-                                )}
-
+                        {properties
+                            .filter((p) => p)
+                            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                            .slice(0, 6)
+                            .map((property) => (
+                                <PropertyCard
+                                    key={property._id}
+                                    property={property}
+                                    isWishlisted={wishlistedIds.includes(String(property._id))}
+                                    onToggleWishlist={handleToggleWishlist}
+                                />
+                            ))}                           
                     </div>
                 )}
+
+                <div className={s.discoverButtonContainer}>
+                    <button className={s.discoverButton} onClick={()=> router.push('/properties')}>
+                        Discover More Properties
+                    </button>
+                </div>
             </div>
         </div>
     )

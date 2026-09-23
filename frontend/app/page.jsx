@@ -6,6 +6,7 @@ import Category from '@/app/components/Home/Category.jsx'
 import Features from '@/app/components/Home/Features.jsx'
 import HowItWorks from '@/app/components/Home/HowItWorks.jsx'
 import FeaturedCollection from '@/app/components/Home/FeaturedCollection.jsx'
+import Footer from '@/app/components/commons/Footer.jsx'
 
 
 
@@ -18,6 +19,7 @@ const page = () => {
       <Features />
       <HowItWorks />
       <FeaturedCollection />
+      <Footer />
     </div>
   )
 }

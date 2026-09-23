@@ -56,7 +56,7 @@ const Hero = () => {
         try {
             const isWishlisted = wishlistedIds.includes(propertyId);
             if(isWishlisted) {
-                await axios.delete(`${API_URL}/api/wishlist${propertyId}`, {
+                await axios.delete(`${API_URL}/api/wishlist/${propertyId}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setWishlistedIds((prev)=> prev.filter((id) => id !== propertyId))
