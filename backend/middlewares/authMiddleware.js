@@ -1,50 +1,81 @@
-import jwt from 'jsonwebtoken';
-import User from '../models/user.model.js';
+import jwt from "jsonwebtoken";
+import User from "../models/user.model.js";
 
-//protect
+// Protect
 export const protect = async (req, res, next) => {
     try {
         let token;
-        if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
+
+        if (
+            req.headers.authorization &&
+            req.headers.authorization.startsWith("Bearer")
+        ) {
             token = req.headers.authorization.split(" ")[1];
         }
 
         if (!token) {
             return res.status(401).json({
                 success: false,
-                message: "Not authorized, token missing"
-            })
+                message: "Not authorized, token missing",
+            });
         }
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = await User.findById(decoded.id).select("_password");
+        const decoded = jwt.verify(
+            token,
+            process.env.JWT_SECRET
+        );
 
-        if (req.user && req.user.isBlocked) {
+        req.user = await User.findById(decoded.id).select("-password");
+
+        if (!req.user) {
             return res.status(401).json({
                 success: false,
-                message: "Your account has been blocked by an admin"
-            })
+                message: "User not found",
+            });
         }
 
-        next()
+        if (req.user.isBlocked) {
+            return res.status(401).json({
+                success: false,
+                message: "Your account has been blocked by an admin",
+            });
+        }
+
+        next();
 
     } catch (error) {
+        console.error("AUTH ERROR:", error);
+
         return res.status(401).json({
             success: false,
-            message: "Token Invalid" || error.message
-        })
+            message: "Token Invalid",
+        });
     }
-}
+};
 
-// role base authentication
+
+// Role-based authorization
 export const authorize = (...roles) => {
     return (req, res, next) => {
+
+        console.log("Authenticated User:", req.user);
+        console.log("User Role:", req.user?.role);
+        console.log("Required Roles:", roles);
+
+        if (!req.user) {
+            return res.status(401).json({
+                success: false,
+                message: "Not authenticated",
+            });
+        }
+
         if (!roles.includes(req.user.role)) {
             return res.status(403).json({
                 success: false,
-                message: "Access Denied. You don't have permission."
-            })
+                message: "Access Denied. You don't have permission.",
+            });
         }
+
         next();
-    }
-}
+    };
+};

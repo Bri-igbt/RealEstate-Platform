@@ -41,7 +41,7 @@ app.use(express.json());
 // Routes
 app.use("/api/auth", authRouter);
 app.use("/api/user", userRouter);
-app.use("/api/property", propertyRouter);
+app.use("/api/properties", propertyRouter);
 app.use("/api/inquiry", inquiryRouter);
 app.use("/api/wishlist", wishlistRouter);
 app.use("/api/contact", contactRouter);

@@ -3,20 +3,20 @@
 import React from 'react'
 import { propertyCardStyles as s } from '@/assets/dummyStyles.js'
 import { useAuth } from '@/context/AuthContext.jsx'
-import { useRouter } from 'next/navigation.js'
-import Link from 'next/link.js'
-import Image from 'next/image.js'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import Image from 'next/image'
 import { HiArrowsExpand, HiEye, HiHeart, HiLocationMarker, HiOutlineHeart, HiOutlineHome, HiOutlineUserGroup, HiShieldCheck } from 'react-icons/hi'
 
-const PropertyCard = ({ 
+const PropertyCard = ({
     property,
     renderActions,
     isWishlisted,
     onToggleWishlist
 }) => {
-    if(!property) return null;
+    if (!property) return null;
 
-    const {user} = useAuth();
+    const { user } = useAuth();
     const router = useRouter();
 
     // FOR WISHLIST CLICK
@@ -24,30 +24,36 @@ const PropertyCard = ({
         e.preventDefault();
         e.stopPropagation();
 
-        if(!user){
+        if (!user) {
             router.push('/login');
             return;
         }
-        if(onToggleWishlist){
+        if (onToggleWishlist) {
             onToggleWishlist(property._id);
         }
     }
 
-    const formattedPrice = new Intl.NumberFormat("en-IN", {
+    const formattedPrice = new Intl.NumberFormat("en-NG", {
         style: "currency",
-        currency: "NGR",
+        currency: "NGN",
         maximumFractionDigits: 0,
     }).format(property.price);
 
     const statusBadgeClass = s.badgeStatus(property.status);
 
+    // guard against missing/empty image so next/image never gets ""
+    const imageSrc = property.images?.[0] && property.images[0].trim() !== ""
+        ? property.images[0]
+        : "/placeholder-property.jpg";
+
     return (
         <div className={s.card}>
-            <Link href={`/property/${property._id}`} className={s.link}>
+            <Link href={`/properties/${property._id}`} className={s.link}>
                 <div className={s.imageSection}>
-                    <Image 
-                        src={property.Image[0]}
+                    <Image
+                        src={imageSrc}
                         alt={property.title}
+                        fill
                         className={s.image}
                     />
 
@@ -58,7 +64,7 @@ const PropertyCard = ({
                                     {property.status === "sale" ? "available" : property.status}
                                 </span>
                             ) : (
-                                    <span className={s.badgeNew}>New</span>
+                                <span className={s.badgeNew}>New</span>
                             )}
 
                             <span className={s.badgeVerified}>
@@ -129,33 +135,33 @@ const PropertyCard = ({
                                 </div>
                             </>
                         ) : (
-                                <>
-                                    <div className={s.specItem}>
-                                        <div className={s.specIcon}>
-                                            <HiOutlineHome size={20} />
-                                        </div>
-                                        <div className={s.specValue}>{property.bhk}</div>
-                                        <div className={s.specLabel}>Beds</div>
+                            <>
+                                <div className={s.specItem}>
+                                    <div className={s.specIcon}>
+                                        <HiOutlineHome size={20} />
                                     </div>
-                                    <div className={`${s.specItem} ${s.specDivider}`}>
-                                        <div className={s.specIcon}>
-                                            <HiOutlineUserGroup size={20} />
-                                        </div>
-                                        <div className={s.specValue}>
-                                            {property.bathrooms ||
-                                                Math.max(1, parseInt(property.bhk) - 1 || 0)}
-                                        </div>
-                                        <div className={s.specLabel}>Baths</div>
+                                    <div className={s.specValue}>{property.bhk}</div>
+                                    <div className={s.specLabel}>Beds</div>
+                                </div>
+                                <div className={`${s.specItem} ${s.specDivider}`}>
+                                    <div className={s.specIcon}>
+                                        <HiOutlineUserGroup size={20} />
                                     </div>
-                                    <div className={s.specItem}>
-                                        <div className={s.specIcon}>
-                                            <HiArrowsExpand size={20} />
-                                        </div>
-                                        <div className={s.specValue}>{property.areaSize}</div>
-                                        <div className={s.specLabel}>Sq Ft</div>
+                                    <div className={s.specValue}>
+                                        {property.bathrooms ||
+                                            Math.max(1, parseInt(property.bhk) - 1 || 0)}
                                     </div>
-                                </>
-                            )}
+                                    <div className={s.specLabel}>Baths</div>
+                                </div>
+                                <div className={s.specItem}>
+                                    <div className={s.specIcon}>
+                                        <HiArrowsExpand size={20} />
+                                    </div>
+                                    <div className={s.specValue}>{property.areaSize}</div>
+                                    <div className={s.specLabel}>Sq Ft</div>
+                                </div>
+                            </>
+                        )}
                     </div>
 
                     {!renderActions && (
@@ -169,10 +175,10 @@ const PropertyCard = ({
             </Link>
 
             {renderActions && (
-                <div 
-                    className={s.actionsContainer} 
-                    onClick={(e) => {e.preventDefault(); e.stopPropagation();}}
-                    onMouseDown={(e)=> e.stopPropagation()}
+                <div
+                    className={s.actionsContainer}
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                    onMouseDown={(e) => e.stopPropagation()}
                 >
                     {renderActions(property)}
                 </div>
