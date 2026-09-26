@@ -4,7 +4,7 @@ import sendEmail from '../utils/sendEmail.js';
 import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
 
-// register
+// REGISTER
 export const register = async (req, res) => {
     try {
         const {name, email, password, role} = req.body;
@@ -58,7 +58,7 @@ export const register = async (req, res) => {
     }
 }
 
-// login
+// LOGIN
 export const login = async (req, res) => {
     try {
         const {email, password} = req.body;
@@ -114,7 +114,7 @@ export const login = async (req, res) => {
     }
 }
 
-// to get profile
+// GET PROFILE
 export const getProfile = async (req, res) => {
     try {
         const user = await User.findById(req.user.id).select("-password");
@@ -136,7 +136,7 @@ export const getProfile = async (req, res) => {
     }
 }
 
-// Verification of email
+// VERIFICATION OF EMAIL
 export const verifyEmail = async (req, res) => {
     try {
         const {email, code} = req.body;
@@ -182,13 +182,13 @@ export const verifyEmail = async (req, res) => {
     }
 }
 
-// Forgot password 
+// FORGOT PASSWORD
 export const forgotPassword = async (req, res) => {
     try {
-        const {email} = req.body;
+        const { email } = req.body;
         const user = await User.findOne({ email });
 
-        if(!user) {
+        if (!user) {
             return res.status(404).json({
                 message: "No user found with that email address"
             })
@@ -230,14 +230,14 @@ export const forgotPassword = async (req, res) => {
         }
 
     } catch (error) {
-        res.status(200).json({
-            message: message.error,
+        res.status(500).json({
+            message: error.message,
             success: false
         })
     }
 }
 
-// now to reset it(password)
+// RESET PASSWORD
 export const resetPassword = async (req, res) => {
     try {
         const {token} = req.params;
@@ -249,6 +249,7 @@ export const resetPassword = async (req, res) => {
             resetPasswordToken,
             resetPasswordExpire: { $gt: Date.now() }
         });
+
         if(!user) {
             return res.status(400).json({
                 message: "Invalid or expired password reset token",

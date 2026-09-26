@@ -1,9 +1,139 @@
-import React from 'react'
+'use client'
+
+import React, { useState } from 'react'
+import { loginStyles as s } from '@/assets/dummyStyles.js'
+import { useAuth } from '@/context/AuthContext.jsx'
+import Navbar from '@/app/components/commons/Navbar.jsx'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { HiEye, HiEyeOff } from 'react-icons/hi'
 
 const page = () => {
+    const {login} = useAuth();
+    const router = useRouter();
+
+    const [error, setError] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [formData, setFormData] = useState({
+        email: "",
+        password: "",
+    })
+
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value});
+        setError("");
+    }
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setIsLoading(true);
+        setError("");
+
+        const result = await login(formData.email, formData.password);
+
+        if(result.success){
+            const storedUser = JSON.parse(
+                localStorage.getItem("user") || sessionStorage.getItem("user"),
+            );
+            if(storedUser?.role === "admin"){
+                router.push("/admin-dashboard");
+
+            } else if (storedUser?.role === "seller"){
+                router.push("/dashboard");
+            } else {
+                router.push("/")
+            }
+        } else {
+            setError(result.message)
+        }
+
+        setIsLoading(false);
+    }
+
     return (
-        <div>
-            hello
+        <div className={s.pageContainer}>
+            <Navbar />
+            <div className={s.containerCenter}>
+                <div className={s.card}>
+                    <h2 className={s.title}>Welcome Back</h2>
+                    <p className={s.subtitle}>
+                        Please enter your details to sign in
+                    </p>
+
+                    {error && <div className={s.errorAlert}>{error}</div>}
+
+                    <form onSubmit={handleSubmit} className={s.form}>
+                        <div>
+                            <label className={s.label}>Email Address</label>
+                            <input 
+                                type="email" 
+                                name="email" 
+                                placeholder='name@company.com'
+                                value={formData.email}
+                                onChange={handleChange}
+                                required
+                                className={s.input}
+                            />
+                        </div>
+
+                        <div>
+                            <div className={s.passwordHeader}>
+                                <label className={s.label}>Password</label>
+                                <Link href='/forgot-password' className={s.forgotLink}>
+                                    Forgot Password
+                                </Link>
+                            </div>
+
+                            <div style={{position: "relative"}}>
+                                <input 
+                                    type={showPassword ? "text" : "password"}
+                                    name='password'
+                                    placeholder='0000000'
+                                    value={formData.password}
+                                    onChange={handleChange}
+                                    required
+                                    className={s.input}
+                                    style={{ paddingRight: "40px" }}
+                                />
+
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    style={{
+                                        position: "absolute",
+                                        right: "12px",
+                                        top: "50%",
+                                        transform: "translateY(-50%)",
+                                        background: "none",
+                                        border: "none",
+                                        cursor: "pointer",
+                                        color: "#6b7280",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        padding: 0
+                                    }}
+                                >
+                                    {showPassword ? <HiEyeOff size={20} /> : <HiEye size={20} />}
+                                </button>
+                            </div>
+                        </div>
+
+                        <button className={s.submitButton} type='submit' disabled={isLoading}>
+                            {isLoading ? "Signing in..." : "Sign In"}
+                        </button>
+                    </form>
+
+                    <div>
+                        <p className={s.footerText}>
+                            Don't have an account?{" "}
+                            <Link href="/register" className={s.registerLink}>
+                                Create an Account
+                            </Link>
+                        </p>
+                    </div>
+                </div>
+            </div>
         </div>
     )
 }
