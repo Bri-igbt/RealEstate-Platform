@@ -140,7 +140,7 @@ const Navbar = () => {
                                             alt={user.name}
                                             width={40}
                                             height={40}
-                                            className={s.userAvatar}
+                                            className={s.avatar}
                                         />
                                     </Link>
 
