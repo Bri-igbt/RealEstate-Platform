@@ -1,16 +1,16 @@
-import express from 'express'
-import { authorize, protect } from '../middlewares/authMiddleware.js';
-import { 
-    approveSellers, 
-    blockUser, 
-    deleteProperty, 
-    deleteUser, 
-    getAllInquiries, 
-    getAllProperties, 
-    getAllUsers, 
-    getDashboardStats, 
-    getPendingSellers 
-} from '../controllers/adminController.js';
+import express from "express";
+import { authorize, protect } from "../middlewares/authMiddleware.js";
+import {
+  approveSellers,
+  blockUser,
+  deleteProperty,
+  deleteUser,
+  getAllInquiries,
+  getAllProperties,
+  getAllUsers,
+  getDashboardStats,
+  getPendingSellers,
+} from "../controllers/adminController.js";
 
 const adminRouter = express.Router();
 

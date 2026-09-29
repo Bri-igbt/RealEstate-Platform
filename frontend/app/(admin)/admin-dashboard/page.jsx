@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { adminDashboardStyles as s } from '@/assets/dummyStyles.js'
 import { useAuth } from '@/context/AuthContext.jsx'
 import axios from 'axios'
@@ -8,36 +8,40 @@ import API_URL from '@/config.js'
 import { HiOutlineCheckCircle, HiOutlineLibrary, HiOutlineTicket, HiOutlineUserGroup } from 'react-icons/hi'
 
 const page = () => {
-    const {token} = useAuth();
+    const { token } = useAuth();
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [stats, setStats] = useState({
         totalUsers: 0,
         totalProperties: 0,
-        totalListings: 0,
+        activeListings: 0,
         soldProperties: 0,
     })
 
-    useEffect(()=> {
-        console.log("Admin Dashboard mounted")
-        const fetchDashboardData = async () => {
-            try {
-                const res = await axios.get(`${API_URL}/api/admin/stats`, {
-                    headers: {Authorization: `Bearer ${token}`}
-                });
-                if (res.data.success){
-                    setStats(res.data.stats)
-                };
-                setLoading(false);
-
-            } catch (error) {
-                console.error("Failed to load admin dashboard stats:", err);
-                setLoading(false);
+    const fetchDashboardData = useCallback(async () => {
+        if (!token) return;
+        try {
+            setLoading(true);
+            setError(null);
+            const res = await axios.get(`${API_URL}/api/admin/stats`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.data.success) {
+                setStats(res.data.stats)
             }
+        } catch (err) {
+            console.error("Failed to load admin dashboard stats:", err);
+            setError(err.response?.data?.message || "Failed to load dashboard stats");
+        } finally {
+            setLoading(false);
         }
-        fetchDashboardData()
-    }, [])
+    }, [token])
 
-    if(loading) {
+    useEffect(() => {
+        fetchDashboardData()
+    }, [fetchDashboardData])
+
+    if (loading) {
         return (
             <div className={s.loaderFullPage}>
                 <div className={s.loader}></div>
@@ -76,7 +80,6 @@ const page = () => {
         },
     ];
 
-
     return (
         <>
             <div className={s.headerContainer}>
@@ -85,24 +88,22 @@ const page = () => {
                     <p className={s.pageSubtitle}>Welcome back, administrator. Here's today's summary.</p>
                 </div>
 
-                <button
-                    onClick={()=> {
-                        setLoading(true);
-                        window.location.reload();
-                    }}
-                    className={s.refreshButton}
-                >
+                <button onClick={fetchDashboardData} className={s.refreshButton}>
                     Refresh Data
                 </button>
             </div>
 
+            {error && (
+                <p style={{ color: "#ef4444", marginBottom: "1rem" }}>{error}</p>
+            )}
+
             <div className={s.statsGrid}>
-                {statCards.map((card, i)=> (
+                {statCards.map((card, i) => (
                     <div className={s.statCard} key={i}>
-                        <div 
-                            className={s.statIconContainer} 
+                        <div
+                            className={s.statIconContainer}
                             style={{
-                                backgroundColor: card.bg, 
+                                backgroundColor: card.bg,
                                 color: card.color,
                             }}
                         >
@@ -142,6 +143,8 @@ const page = () => {
                     </p>
                     <div className={s.adminToolsButtonsContainer}>
                         <button className={s.adminToolButton}>System Logs</button>
+                        <button className={s.adminToolButton}>DB Backups</button>
+                        <button className={s.adminToolButton}>Settings</button>
                     </div>
                 </div>
             </div>
