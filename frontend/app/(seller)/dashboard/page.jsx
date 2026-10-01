@@ -1,9 +1,276 @@
-import React from 'react'
+'use client'
 
-const page = () => {
+import React, { useEffect, useState } from 'react'
+import { sellerDashboardStyles as s } from '@/assets/dummyStyles.js'
+import { useAuth } from '@/context/AuthContext.jsx'
+import axios from 'axios'
+import API_URL from '@/config.js'
+import { HiOutlineCheckCircle, HiOutlineDownload, HiOutlineEye, HiOutlineLibrary, HiOutlinePencilAlt, HiOutlineSearch, HiOutlineTrash, HiOutlineUserGroup, HiPlus } from 'react-icons/hi'
+import Link from 'next/link'
+import PropertyCard from '@/app/components/commons/PropertyCard.jsx'
+
+const SellerDashboardPage = () => {
+  const { logout, token } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [inquiries, setInquiries] = useState([]);
+  const [properties, setProperties] = useState([]);
+  const [stats, setStats] = useState({
+    totalProperties: 0,
+    activeListings: 0,
+    soldProperties: 0,
+    totalInquiries: 0,
+    totalViews: 0,
+  })
+
+  useEffect(() => {
+    if (!token) return;
+
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const [statsRes, propsRes, inqRes] = await Promise.all([
+          axios.get(`${API_URL}/api/properties/seller/dashboard`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          axios.get(`${API_URL}/api/properties/my`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          axios.get(`${API_URL}/api/inquiry/seller`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
+        setStats(statsRes.data.stats || statsRes.data);
+        const props = Array.isArray(propsRes.data)
+          ? propsRes.data
+          : propsRes.data.properties || [];
+        setProperties(props);
+        setInquiries(
+          Array.isArray(inqRes.data.inquiries)
+            ? inqRes.data.inquiries.slice(0, 3)
+            : Array.isArray(inqRes.data)
+              ? inqRes.data.slice(0, 3)
+              : []
+        )
+
+      } catch (err) {
+        console.error("Failed to load dashboard data:", err)
+        setError(err.response?.data?.message || "Failed to load dashboard data");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData()
+  }, [token])
+
+  const handleDelete = async (id) => {
+    if(!window.confirm("Are you sure you want to delete this listing?"))
+      return;
+
+    try {
+      await axios.delete(`${API_URL}/api/property/${id}`, {
+        headers: { Authorization: `Bearer ${token}`},
+      });
+      setProperties(properties.filter((p) => p._id !== id));
+    } catch (error) {
+      alert("Failed to delete property.")
+    }
+  }
+
+  const handleStatusUpdate = async (id, currentStatus) => {
+    const newStatus = currentStatus === "sold" ? "sale" : "sold"
+
+    try {
+      await axios.patch(`${API_URL}/api/property/${id}/status`, {
+        status: newStatus
+      }, {
+        headers: { Authorization: `Bearer ${token} `}
+      })
+
+      setProperties((p) => (p._id === id ? { ...p, status: newStatus } : p ));
+
+    } catch (err) {
+      alert("Failed to update status.");
+    }
+  }
+
+  const handleExport = () => {
+    const headers = ["Title", "Location", "Type", "Price", "Status", "Views"];
+    const csvRows = properties.map((p) => [
+      p.title,
+      `${p.area}, ${p.city}`,
+      p.propertyType,
+      p.price,
+      p.status,
+      p.views || 0,
+    ]);
+
+    const csvContent = [headers, ...csvRows].map((e) => e.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", "property_listings.csv");
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  if (loading)
+    return (
+      <div className="loader-full-page">
+        <div className="loader"></div>
+      </div>
+    );
+
+  const statCards = [
+    {
+      title: "Total Views",
+      value: stats.totalViews?.toLocaleString() || "0",
+      icon: HiOutlineEye,
+      color: "#0d6e59",
+    },
+    {
+      title: "Active Leads",
+      value: stats.totalInquiries?.toLocaleString() || "0",
+      icon: HiOutlineUserGroup,
+      color: "#0d6e59",
+    },
+    {
+      title: "Live Listings",
+      value: stats.activeListings?.toLocaleString() || "0",
+      icon: HiOutlineLibrary,
+      color: "#0d6e59",
+    },
+    {
+      title: "Properties Sold",
+      value: stats.soldProperties?.toLocaleString() || "0",
+      icon: HiOutlineCheckCircle,
+      color: "#0d6e59",
+    },
+  ];
+
+  const filteredProperties = Array.isArray(properties)
+    ? properties
+      .filter(
+        (p) =>
+          p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          p.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          p.area.toLowerCase().includes(searchTerm.toLowerCase()),
+      )
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    : [];
+
   return (
-    <div>page</div>
+    <>
+      <header className={s.header}>
+        <div className={s.headerLeft}>
+          <h1 className={s.headerTitle}>Seller Dashboard</h1>
+          <p className={s.headerSubtitle}>
+            Manage your property portfolio and track performance.
+          </p>
+        </div>
+        
+        <div className={s.headerActions}>
+          <button className={s.exportButton} onClick={handleExport}>
+            <HiOutlineDownload size={20} /> Export
+          </button>
+          <Link href="/add-property" className={s.addButton}>
+            <HiPlus size={20} /> Add New 
+          </Link>
+        </div>
+      </header>
+
+      <div className={s.statsGrid}>
+        {statCards.map((card, i) => (
+          <div className={s.statCard} style={{ "--card-color": card.color }}>
+            <div className={s.statIconWrapper}>
+              <card.icon size={20} />
+            </div>
+            <div className={s.statTitle}>{card.title}</div>
+            <div className={s.statValue}>{card.value}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className={s.listingsSection}>
+        <div className={s.listingsHeader}>
+          <h2 className={s.listingsTitle}>Property Listings</h2>
+          <div className={s.searchWrapper}>
+            <HiOutlineSearch className={s.searchIcon} />
+            <input 
+              type="text" 
+              placeholder='Search Listings...'
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className={s.searchInput}
+            />
+          </div>
+        </div>
+
+        {filteredProperties.length === 0 ? (
+          <div className={s.emptyListings}>
+            No properties found matching "{searchTerm}"
+          </div>
+        ) : (
+          <>
+            <div className={s.propertiesGrid}>
+              {filteredProperties.slice(0,3).map((p)=> (
+                <PropertyCard 
+                  key={p._id} 
+                  property={p} 
+                  renderActions={() => (
+                    <div className={s.propertyActions}>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleStatusUpdate(p._id, p.status)
+                        }}
+                        className={s.statusButton(p.status)}
+                        title={p.status === "sold" ? "Mark as Available" : "Mark as Sold"}
+                      >
+                        <HiOutlineCheckCircle size={14} /> {" "}
+                        {p.status === "sold" ? "Available" : "Sold"}
+                      </button>
+
+                      <Link href={`/edit-property/${p._id}`} className={s.editButton}>
+                        <HiOutlinePencilAlt size={14} /> Edit
+                      </Link>
+
+                      <button className={s.deleteButton} onClick={() => handleDelete(p._id)}>
+                        <HiOutlineTrash size={14} /> Delete
+                      </button>
+                    </div>
+                  )}
+                />
+              ))}
+            </div>
+
+            {filteredProperties.length > 3 && (
+              <div className={s.showMoreWrapper}>
+                  <Link href='/seller/my-properties' className={s.showMoreButton} >
+                    Show More Listing{" "}
+                    <HiOutlinePencilAlt size={18} style={{transform: "rotate(90deg)"}} />
+                  </Link>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      <div className={s.widgetsGrid}>
+        <div className={s.inquiriesWidget}>
+          <h2 className={s.widgetTitle}>Recent Lead Inquiries</h2>
+          <p className={s.widgetSubtitle}>
+            New messages for potential buyers.
+          </p>
+        </div>
+      </div>
+    </>
   )
 }
 
-export default page
+export default SellerDashboardPage

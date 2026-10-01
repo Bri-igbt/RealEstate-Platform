@@ -5,7 +5,7 @@ import { getSellerInquiries, markAsRead, sendInquiry } from '../controllers/inqu
 const inquiryRouter = express.Router();
 
 inquiryRouter.post("/", protect, authorize("buyer"), sendInquiry);
-inquiryRouter.post("/seller", protect, authorize("seller"), getSellerInquiries);
+inquiryRouter.get("/seller", protect, authorize("seller"), getSellerInquiries);
 inquiryRouter.post("/:id/read", protect, markAsRead); 
 
 export default inquiryRouter;
