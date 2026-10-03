@@ -5,7 +5,7 @@ import { sellerDashboardStyles as s } from '@/assets/dummyStyles.js'
 import { useAuth } from '@/context/AuthContext.jsx'
 import axios from 'axios'
 import API_URL from '@/config.js'
-import { HiOutlineCheckCircle, HiOutlineDownload, HiOutlineEye, HiOutlineLibrary, HiOutlinePencilAlt, HiOutlineSearch, HiOutlineTrash, HiOutlineUserGroup, HiPlus } from 'react-icons/hi'
+import { HiOutlineBell, HiOutlineCheckCircle, HiOutlineDownload, HiOutlineEye, HiOutlineLibrary, HiOutlinePencilAlt, HiOutlineSearch, HiOutlineTrash, HiOutlineUserGroup, HiPlus } from 'react-icons/hi'
 import Link from 'next/link'
 import PropertyCard from '@/app/components/commons/PropertyCard.jsx'
 
@@ -83,13 +83,15 @@ const SellerDashboardPage = () => {
     const newStatus = currentStatus === "sold" ? "sale" : "sold"
 
     try {
-      await axios.patch(`${API_URL}/api/property/${id}/status`, {
+      await axios.patch(`${API_URL}/api/properties/${id}/status`, {  
         status: newStatus
       }, {
-        headers: { Authorization: `Bearer ${token} `}
+        headers: { Authorization: `Bearer ${token}` }   
       })
 
-      setProperties((p) => (p._id === id ? { ...p, status: newStatus } : p ));
+      setProperties((prev) =>
+        prev.map((p) => (p._id === id ? { ...p, status: newStatus } : p))
+      );  
 
     } catch (err) {
       alert("Failed to update status.");
@@ -186,7 +188,7 @@ const SellerDashboardPage = () => {
 
       <div className={s.statsGrid}>
         {statCards.map((card, i) => (
-          <div className={s.statCard} style={{ "--card-color": card.color }}>
+          <div key={card.title} className={s.statCard} style={{ "--card-color": card.color }}>
             <div className={s.statIconWrapper}>
               <card.icon size={20} />
             </div>
@@ -267,6 +269,65 @@ const SellerDashboardPage = () => {
           <p className={s.widgetSubtitle}>
             New messages for potential buyers.
           </p>
+
+          <div className={s.inquiriesList}>
+            {inquiries.map((inq, i) => (
+              <div key={inq._id} className={s.inquiryItem}>
+                <div className={s.inquiryLeft}>
+                  <div className={s.inquiryIcon}>
+                    <HiOutlineBell size={18} color='var(--primary)' />
+                  </div>
+
+                  <div>
+                    <div className={s.inquiryName}>
+                      {inq.buyer?.name || "Potential Buyer"}
+                    </div>
+                    <div className={s.inquiryProperty}>
+                      {inq.property?.title?.length > 30 
+                        ? inq.property?.title?.slice(0, 30) + "..."
+                        : inq.property?.title
+                      }
+                    </div>
+                  </div>
+                </div>
+
+                <div className={s.inquiryRight}>
+                  <div className={s.inquiryDate}>
+                    {new Date(inq.createdAt).toLocaleDateString()}
+                  </div>
+                  <span className={s.inquiryStatus(inq.status)}>
+                    {inq.status === "read" ? "Read" : "New"}
+                  </span>
+                </div>
+              </div>
+            ))}
+
+            {inquiries.length === 0 && (
+              <p className={s.noInquiries}>No recent inquiries.</p>
+            )}
+          </div>
+        </div>
+
+        <div className={s.tipsWidget}>
+          <h2 className={s.widgetTitle}>Quick Tips</h2>
+
+          <div className={s.tipsList}>
+            <div className={s.tipCardHighViews}>
+              <h4 className={s.tipTitleHighViews}>
+                <HiOutlineEye /> High Views!
+              </h4>
+              <p className={s.tipTextHighViews}>
+                Your listings are trending. Try adding video tours to increase interest. 
+              </p>
+            </div>
+
+            <div className={s.tipCardMarket}>
+              <h4 className={s.tipTitleMarket}>Market Insight</h4>
+              <p className={s.tipTextMarket}>
+                Properties in your area are selling fast. Your prices are competitive.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </>
