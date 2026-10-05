@@ -6,6 +6,6 @@ const inquiryRouter = express.Router();
 
 inquiryRouter.post("/", protect, authorize("buyer"), sendInquiry);
 inquiryRouter.get("/seller", protect, authorize("seller"), getSellerInquiries);
-inquiryRouter.post("/:id/read", protect, markAsRead); 
+inquiryRouter.patch("/:id/read", protect, markAsRead); 
 
 export default inquiryRouter;

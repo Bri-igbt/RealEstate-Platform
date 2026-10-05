@@ -131,7 +131,7 @@ const Navbar = () => {
                         <div className={s.rightSection}>
                             {user ? (
                                 <div className={s.userSection}>
-                                    <Link href='/profile' className='flex items-center'>
+                                    <Link href='/profiles' className='flex items-center'>
                                         <Image
                                             src={
                                                 user.profilePic ||
