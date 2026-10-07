@@ -25,12 +25,12 @@ const SellerSidebar = ({ isOpen, onClose }) => {
         {
             name: "My Listings",
             icon: HiOutlineClipboardList,
-            path: "/seller/my-properties",
+            path: "/my-properties",
         },
         { name: "Leads", icon: HiOutlineChartBar, path: "/inquiries" },
-        { name: "Messages", icon: HiOutlineChatAlt2, path: "/seller/chat-messages" },
-        { name: "Profile", icon: HiOutlineUser, path: "/profile" },
-        { name: "Support", icon: HiOutlineSupport, path: "/seller/contact" },
+        { name: "Messages", icon: HiOutlineChatAlt2, path: "chat-messages" },
+        { name: "Profile", icon: HiOutlineUser, path: "/profiles" },
+        { name: "Support", icon: HiOutlineSupport, path: "/contact" },
     ];
 
     return (

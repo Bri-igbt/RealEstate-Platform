@@ -570,7 +570,7 @@ export const contactStyles = {
   form: "flex flex-col gap-6",
   formTwoColGrid: "grid grid-cols-2 gap-4 max-sm:grid-cols-1",
   inputGroup: "",
-  label: "block mb-2 font-semibold text-[0.9rem] items-center",
+  label: "block mb-2 font-semibold text-[0.9rem] items-center flex gap-2",
   input: "w-full p-3 rounded-xl border border-[#e2e8f0] outline-none transition-colors focus:border-primary",
   textarea: "resize-none",
   errorMessage: "text-red-600 text-[0.875rem] p-3 bg-red-50 rounded-lg",

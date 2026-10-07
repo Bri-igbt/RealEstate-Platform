@@ -97,7 +97,7 @@ chatRouter.post("/send", async (req, res) => {
 });
 
 // TO GET CHATS FOR USER
-chatRouter.post("/user", async (req, res) => {
+chatRouter.get("/user", async (req, res) => {
     try {
         const userId = req.user._id;
         const chats = await Chat.find({
@@ -119,7 +119,7 @@ chatRouter.post("/user", async (req, res) => {
 });
 
 // TO GET CHAT MESSAGES
-chatRouter.post("/:chatId", async (req, res) => {
+chatRouter.get("/:chatId", async (req, res) => {
     try {
         const chat = await Chat.findById(req.params.chatId).populate(
             "messages.sender",
