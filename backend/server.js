@@ -14,13 +14,20 @@ import adminRouter from "./routes/adminRoutes.js";
 import chatRouter from "./routes/chatRoutes.js";
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
-// DB
 connectDB();
+app.set("trust proxy", 1);
 
-// Middleware
-const allowedOrigins = ["http://localhost:3000"].filter(Boolean);
+const allowedOrigins = [
+  "http://localhost:3000",
+  process.env.CLIENT_URL,
+  ...(process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(",")
+    : []),
+]
+  .filter(Boolean)
+  .map((origin) => origin.trim().replace(/\/$/, ""));
 
 app.use(
   cors({
@@ -28,7 +35,7 @@ app.use(
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
-        callback(new Error("Not allowed by CORS"));
+        callback(null, false);
       }
     },
     credentials: true,
@@ -56,6 +63,7 @@ const io = new Server(server, {
   cors: {
     origin: allowedOrigins,
     methods: ["GET", "POST"],
+    credentials: true,
   },
 });
 
@@ -72,5 +80,5 @@ io.on("connection", (socket) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`Server Started on http://localhost:${PORT}`);
+  console.log(`Server started on port ${PORT}`);
 });
